@@ -13,140 +13,137 @@ struct Day02: AdventDay {
 
     // Replace this with your solution for the first part of the day's challenge.
     func part1() -> Any {
-        let digitList: [Int] = entities.map(changeToDigits)
-        return digitList.reduce(0,+)
+        let elfRules = Rules(red: 12, green: 13, blue: 14)
+        var id = 0
+        return entities.reduce(0) { sum, line in
+            id += 1
+            return isPossible(line, elfRules) ? sum + id : sum
+        }
     }
 
     // Replace this with your solution for the last part of the day's challenge.
     func part2() -> Any {
-        let digitList: [Int] = entities.map(changeToDigitsPart2)
-        return digitList.reduce(0,+)
+        let elfRules = Rules(red: 12, green: 13, blue: 14)
+        return entities.reduce(0) { sum, line in
+            getPower(line, elfRules) + sum
+        }
     }
 
-    func changeToDigits(_ calString: String) -> Int {
-        var last: Int?
-        var total: Int = calString.reduce(0) { total, value in
-            let number = Int(String(value))
-            if number == nil {
-                return total
+    func getPower(_ line: String, _ elfRules: Rules) -> Int {
+        let setText = line.split(separator: ":").last?.split(separator: ";")
+        let arrayGameSet = setText?.map {
+            text -> GameSet in
+            let colorsText = text.split(separator: ",")
+            var newGameSet = GameSet(constraint: elfRules)
+            colorsText.forEach {
+                let colorValues = $0.split(separator: " ")
+                let value = Int(colorValues.first!)
+                switch colorValues.last! {
+                case "red":
+                    newGameSet.red = value
+                case "green":
+                    newGameSet.green = value
+                case "blue":
+                    newGameSet.blue = value
+                default:
+                    // unexpected
+                    break
+                }
             }
-            last = number
-            return total == 0 && number != nil ? number! * 10 : total
+            return newGameSet
         }
-        if last != nil {
-            total = total + last!
-        }
-        return total
+        let myGame = Game(sets: arrayGameSet!)
+        return myGame.power()
     }
 
-    func changeToDigitsPart2(_ calString: String) -> Int {
-        var last: Int?
-        var index = calString.startIndex
-        var total = 0
-        while index < calString.endIndex {
-            let numberFromDigit = Int(String(calString[index]))
-            let number = numberFromDigit == nil ? checkForNumWord(calString, index) : numberFromDigit
+    func isPossible(_ line: String, _ elfRules: Rules) -> Bool {
+        let setText = line.split(separator: ":").last?.split(separator: ";")
+        let arrayGameSet = setText?.map {
+            text -> GameSet in
+            let colorsText = text.split(separator: ",")
+            var newGameSet = GameSet(constraint: elfRules)
+            colorsText.forEach {
+                let colorValues = $0.split(separator: " ")
+                let value = Int(colorValues.first!)
+                switch colorValues.last! {
+                case "red":
+                    newGameSet.red = value
+                case "green":
+                    newGameSet.green = value
+                case "blue":
+                    newGameSet.blue = value
+                default:
+                    // unexpected
+                    break
+                }
+            }
+            return newGameSet
+        }
+        let myGame = Game(sets: arrayGameSet!)
+        return myGame.isValid()
+    }
 
-            if number == nil {
-                calString.formIndex(after: &index)
-                continue
+    func validValues(_: String) -> Bool { return true }
+
+    struct Game {
+        var sets: [GameSet]
+
+        func isValid() -> Bool {
+            return sets.filter {
+                !$0.isValid()
+            }.isEmpty
+        }
+
+        func power() -> Int {
+            var redMax = 0
+            var greenMax = 0
+            var blueMax = 0
+
+            sets.forEach {
+                if $0.red != nil && $0.red! > redMax {
+                    redMax = $0.red!
+                }
+                if $0.blue != nil && $0.blue! > blueMax {
+                    blueMax = $0.blue!
+                }
+                if $0.green != nil && $0.green! > greenMax {
+                    greenMax = $0.green!
+                }
             }
 
-            last = number
-            total == 0 ? total = number! * 10 : nil
-
-            if numberFromDigit == nil {
-                incrementIndexByWordLength(calString, number!, &index)
-            } else {
-                calString.formIndex(after: &index)
-            }
+            return redMax * greenMax * blueMax
         }
-        if last != nil {
-            total += last!
-        }
-        return total
     }
 
-    func checkForNumWord(_ calString: String, _ index: String.Index) -> Int? {
-        var offset = 3
-        var number: Int?
-        while offset < 6 {
-            let endex = calString.index(index, offsetBy: offset, limitedBy: calString.endIndex)
-            if endex == nil {
-                break
+    struct GameSet {
+        var red: Int?
+        var green: Int?
+        var blue: Int?
+        var constraint: Rules
+
+        func isValid() -> Bool {
+            if red != nil && red! > constraint.red {
+                return false
             }
 
-            let substring = String(calString[index ..< endex!])
-            switch offset {
-            case 3:
-                number = threeLetterDigit(substring)
-            case 4:
-                number = fourLetterDigit(substring)
-            case 5:
-                number = fiveLetterDigit(substring)
-            default:
-                // Unexpected; should be a throws in real life
-                break
+            if green != nil && green! > constraint.green {
+                return false
             }
 
-            if number != nil {
-                break
+            if blue != nil && blue! > constraint.blue {
+                return false
             }
-            offset += 1
-        }
-        return number
-    }
-
-    func incrementIndexByWordLength(_ line: String, _ wordValue: Int, _ index: inout String.Index) {
-        switch wordValue {
-        case 1, 2, 6:
-            line.formIndex(&index, offsetBy: 2)
-        case 4, 5, 9:
-            line.formIndex(&index, offsetBy: 3)
-        case 3, 7, 8:
-            line.formIndex(&index, offsetBy: 4)
-        default:
-            // Unexpected
-            break
+            return true
         }
     }
 
-    func threeLetterDigit(_ substring: String) -> Int? {
-        switch substring {
-        case "one":
-            return 1
-        case "two":
-            return 2
-        case "six":
-            return 6
-        default:
-            return nil
-        }
-    }
+    struct Rules {
+        var red: Int
+        var green: Int
+        var blue: Int
 
-    func fourLetterDigit(_ substring: String) -> Int? {
-        switch substring {
-        case "four":
-            return 4
-        case "five":
-            return 5
-        case "nine":
-            return 9
-        default:
-            return nil
-        }
-    }
-
-    func fiveLetterDigit(_ substring: String) -> Int? {
-        switch substring {
-        case "three":
-            return 3
-        case "seven":
-            return 7
-        case "eight":
-            return 8
-        default:
-            return nil
+        func getTotal() -> Int {
+            return red + blue + green
         }
     }
 }
