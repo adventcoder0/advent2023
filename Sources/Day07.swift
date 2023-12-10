@@ -37,16 +37,17 @@ struct Day07: AdventDay {
     func part2() -> Any {
         var ranking = initRankings(entities: entities, jokers: true)
         ranking.sort { $0 < $1 }
-        var jokerIndexes: [Int] = []
-        var i = 0
-        ranking.forEach { if $0.jokers && $0.type == 3 { jokerIndexes.append(i) }; i += 1 }
+        // var jokerIndexes: [Int] = []
+        // var i = 0
+        // ranking.forEach { if $0.jokers && $0.jokerNums == 1 { jokerIndexes.append(i) }; i += 1 }
         // print(jokerIndexes)
-        // for j in 496 ... 500 {
-        //     ranking[j].setTypeWithJokers()
+        // for j in jokerIndexes {
+        //     print(ranking[j])
         // }
         var index = 1
         return ranking.reduce(into: 0) {
             sum, hand in
+            print(hand.toString())
             sum = sum + (hand.bid * index)
             index += 1
         }
@@ -59,6 +60,7 @@ struct Hand {
     var bid: Int
     var jokers: Bool
     var jokerNums: Int?
+    var debug: Bool?
     // type is integer representation of high,one pair, two pair, 3 of a kind, etc..
     // starting from 0 == high card
     mutating func setType() {
@@ -72,6 +74,10 @@ struct Hand {
             }
         }
         type = determinHandType(seen: seen)
+    }
+
+    func toString() -> String {
+        return "\(values) -> \(bid)"
     }
 
     mutating func setTypeWithJokers() {
@@ -154,15 +160,27 @@ struct Hand {
             }
             if amount == 2 && pair {
                 type = 2
+
+                if debug != nil && debug! {
+                    print("found double : \(key): \(amount)")
+                }
+                break
             }
             if amount == 2 {
                 pair = true
                 type = 1
+                if debug != nil && debug! {
+                    print("found first pair and set: \(key): \(amount)")
+                }
             }
         }
-        // print("Type before jokers: \(type)")
-        if jokers! == 4 || jokers! == 5 { return jokers! + 1 }
-        if jokers! == 3 { return 5 }
+        if debug != nil && debug! {
+            print("Seen before Jokers: \(seen)")
+            print("Type before jokers: \(type)")
+        }
+        if jokers! == 4 || jokers! == 5 { return 6 }
+        if jokers! == 3 && type == 0 { return 5 }
+        if jokers! == 3 && type == 1 { return 6 }
         if jokers! == 2, type == 1 { return 5 }
         if jokers! == 2, type == 0 { return 3 }
         if jokers! == 2 { return 6 }
