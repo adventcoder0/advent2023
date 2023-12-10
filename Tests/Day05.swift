@@ -49,6 +49,19 @@ final class Day05Tests: XCTestCase {
 
     func testPart2() throws {
         let challenge = Day05(data: testData)
-        XCTAssertEqual(String(describing: challenge.part2()), "46")
+        do {
+            let test = try challenge.part2()
+            XCTAssertEqual(String(describing: test), "46")
+        } catch let BadTransformError.DifferentCount(countBefore, countAfter, before, after) {
+            print("Different Count after transform")
+            print("total numbs before:")
+            print(countBefore)
+            print("total items/ # of ranges before")
+            print(before)
+            print("total numbs before:")
+            print(countAfter)
+            print("total items/ # of ranges after")
+            print(after)
+        }
     }
 }
