@@ -47,7 +47,7 @@ struct Day07: AdventDay {
         var index = 1
         return ranking.reduce(into: 0) {
             sum, hand in
-            print(hand.toString())
+            // print(hand.toString())
             sum = sum + (hand.bid * index)
             index += 1
         }
