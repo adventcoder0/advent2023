@@ -15,9 +15,6 @@ struct Day15: AdventDay {
     func part1() -> Any {
         // the new line at the end got my answer wrong, we have to remove it
         let listCharArrays: [[Character]] = entities.map { Array($0).filter { $0 != "\n" } }
-        print("number of strings: \(listCharArrays.count)")
-        print("beginning of strings: \(listCharArrays[0])")
-        print("end of strings: \(listCharArrays.last!)")
         let sum = listCharArrays.reduce(0) { sum, hashString in
             let stringHashed = hashString.reduce(0) { hashThis(initVal: $0, letter: $1) }
             // print("hash after string : \(stringHashed)")
