@@ -16,23 +16,26 @@ struct Day13: AdventDay {
 
     // Replace this with your solution for the first part of the day's challenge.
     func part1() -> Any {
-        return entities.reduce(0) { sum, patternBlock in sum + findValueFromReflection(pattern: patternBlock) }
+        return entities.reduce(0) { sum, patternBlock in sum + findValueFromReflection(pattern: patternBlock, part: 1) }
     }
 
     // Replace this with your solution for the second part of the day's challenge.
     func part2() -> Any {
-        return "Not implemented"
+        print("part 2 ---------------------kjdlksjfkdsj")
+        return entities.reduce(0) { sum, patternBlock in sum + findValueFromReflection(pattern: patternBlock, part: 2) }
     }
 }
 
 extension Day13 {
-    func findValueFromReflection(pattern: String) -> Int {
+    func findValueFromReflection(pattern: String, part: Int) -> Int {
         let grid: [[Character]] = pattern.split(separator: "\n").map { Array($0) }
-        if let rowReflection = findReflectionWithStacks(grid: grid) {
+        print("checking row")
+        if let rowReflection = part == 2 ? findReflectionWithStacksPart2(grid: grid) : findReflectionWithStacks(grid: grid) {
             return rowReflection * 100
         }
+        print("checking column")
         let transposedGrid = transpose(grid: grid)
-        if let columnReflection = findReflectionWithStacks(grid: transposedGrid) {
+        if let columnReflection = part == 2 ? findReflectionWithStacksPart2(grid: transposedGrid) : findReflectionWithStacks(grid: transposedGrid) {
             return columnReflection
         }
         return 0
@@ -50,53 +53,138 @@ extension Day13 {
         var leftStack: [[Character]] = []
         var tempStack: [[Character]] = []
         for index in grid.indices {
-            // print("begin iteration, leftstack: \(leftStack)")
             let previous = leftStack.popLast()
             if previous == nil {
-                // print("left stack should be empty: \(index)")
                 leftStack.append(grid[index])
                 continue
             }
             if previous != grid[index] {
-                // print("continue, did not match at: \(index)")
                 leftStack.append(previous!)
                 leftStack.append(grid[index])
                 continue
             }
             tempStack.append(grid[index])
             tempStack.append(previous!)
-            // print("matched with previous, lets check for reflection: \(index)")
             var check = index + 1
             var isReflection = true
             while check < grid.count {
-                // print("checking at: \(check)")
                 let leftOne = leftStack.popLast()
                 if leftOne == nil {
-                    // print("reached the end of left side")
                     // left stack is empty , we have reached the end of the left side
                     break
                 }
                 tempStack.append(leftOne!)
                 let rightOne = grid[check]
-                if leftOne! != rightOne {
-                    // print("we did not match for reflection: \(check)")
-                    isReflection = false
-                    break
+                if leftOne! == rightOne {
+                    check += 1
+                    continue
                 }
-                check += 1
+
+                isReflection = false
+                break
             }
             if isReflection {
-                // print("finished checking for reflection and returning true for index: \(index)")
                 return index
             }
-            // print("need to reset left stack, before: \(leftStack)")
             while !tempStack.isEmpty {
                 let left = tempStack.removeLast()
                 leftStack.append(left)
             }
-            // print("after reset: \(leftStack)")
-            // print("end of one iteration -------------------------------------")
         }
         return nil
+    }
+
+    func matchesWithSmudge(rowOne: [Character], rowTwo: [Character]) -> Bool {
+        var switched = false
+        for index in rowOne.indices {
+            if rowOne[index] == rowTwo[index] {
+                continue
+            }
+            if switched {
+                return false
+            }
+            switched = true
+        }
+        return true
+    }
+
+    func findReflectionWithStacksPart2(grid: [[Character]]) -> Int? {
+        print("new")
+        var leftStack: [[Character]] = []
+        var tempStack: [[Character]] = []
+        for index in grid.indices {
+            print("iterate: \(index)")
+            let previous = leftStack.popLast()
+            if previous == nil {
+                leftStack.append(grid[index])
+                continue
+            }
+            let smudgeable = matchesWithSmudge(rowOne: previous!, rowTwo: grid[index])
+            if smudgeable, previous! != grid[index], leftStack.isEmpty {
+                print("we smudged the first two, do not need to propagate, return index : \(index)")
+                return index
+            }
+            if smudgeable, previous! != grid[index], index + 1 == grid.count {
+                print("we smudged the last two, do not need to propagate, return index : \(index)")
+                return index
+            }
+            if previous! == grid[index], propagatesToEnd(grid: grid, index: index, leftStack: &leftStack, tempStack: &tempStack) {
+                print("found matching middle rows: \(index), smudged one of the propagated")
+                return index
+            }
+            if !smudgeable {
+                leftStack.append(previous!)
+                leftStack.append(grid[index])
+                continue
+            }
+            if propagatesToEnd(grid: grid, index: index, leftStack: &leftStack, tempStack: &tempStack) {
+                return index
+            }
+            leftStack.append(previous!)
+            leftStack.append(grid[index])
+        }
+        return nil
+    }
+
+    func propagatesToEnd(grid: [[Character]], index: Int, leftStack: inout [[Character]], tempStack: inout [[Character]]) -> Bool {
+        var check = index + 1
+        print("check: \(check)")
+        var isReflection = true
+        var alreadySmudged = false
+        while check < grid.count {
+            let leftOne = leftStack.popLast()
+            if leftOne == nil {
+                break
+            }
+            tempStack.append(leftOne!)
+            let rightOne = grid[check]
+            if leftOne! == rightOne {
+                check += 1
+                continue
+            }
+
+            if alreadySmudged {
+                isReflection = false
+                break
+            }
+            let smudgeable = matchesWithSmudge(rowOne: leftOne!, rowTwo: rightOne)
+            if smudgeable {
+                print("made a smudge")
+                check += 1
+                alreadySmudged = true
+                continue
+            }
+            isReflection = false
+            break
+        }
+        print("did we smudge: \(alreadySmudged)")
+        if isReflection && alreadySmudged {
+            return true
+        }
+        while !tempStack.isEmpty {
+            let left = tempStack.removeLast()
+            leftStack.append(left)
+        }
+        return false
     }
 }
