@@ -21,7 +21,7 @@ struct Day13: AdventDay {
 
     // Replace this with your solution for the second part of the day's challenge.
     func part2() -> Any {
-        print("part 2 ---------------------kjdlksjfkdsj")
+        // print("part 2 ---------------------kjdlksjfkdsj")
         return entities.reduce(0) { sum, patternBlock in sum + findValueFromReflection(pattern: patternBlock, part: 2) }
     }
 }
@@ -29,11 +29,11 @@ struct Day13: AdventDay {
 extension Day13 {
     func findValueFromReflection(pattern: String, part: Int) -> Int {
         let grid: [[Character]] = pattern.split(separator: "\n").map { Array($0) }
-        print("checking row")
+        // print("checking row")
         if let rowReflection = part == 2 ? findReflectionWithStacksPart2(grid: grid) : findReflectionWithStacks(grid: grid) {
             return rowReflection * 100
         }
-        print("checking column")
+        // print("checking column")
         let transposedGrid = transpose(grid: grid)
         if let columnReflection = part == 2 ? findReflectionWithStacksPart2(grid: transposedGrid) : findReflectionWithStacks(grid: transposedGrid) {
             return columnReflection
@@ -109,11 +109,11 @@ extension Day13 {
     }
 
     func findReflectionWithStacksPart2(grid: [[Character]]) -> Int? {
-        print("new")
+        // print("new")
         var leftStack: [[Character]] = []
         var tempStack: [[Character]] = []
         for index in grid.indices {
-            print("iterate: \(index)")
+            // print("iterate: \(index)")
             let previous = leftStack.popLast()
             if previous == nil {
                 leftStack.append(grid[index])
@@ -121,15 +121,15 @@ extension Day13 {
             }
             let smudgeable = matchesWithSmudge(rowOne: previous!, rowTwo: grid[index])
             if smudgeable, previous! != grid[index], leftStack.isEmpty {
-                print("we smudged the first two, do not need to propagate, return index : \(index)")
+                // print("we smudged the first two, do not need to propagate, return index : \(index)")
                 return index
             }
             if smudgeable, previous! != grid[index], index + 1 == grid.count {
-                print("we smudged the last two, do not need to propagate, return index : \(index)")
+                // print("we smudged the last two, do not need to propagate, return index : \(index)")
                 return index
             }
             if previous! == grid[index], propagatesToEnd(grid: grid, index: index, leftStack: &leftStack, tempStack: &tempStack) {
-                print("found matching middle rows: \(index), smudged one of the propagated")
+                // print("found matching middle rows: \(index), smudged one of the propagated")
                 return index
             }
             if !smudgeable {
@@ -148,7 +148,7 @@ extension Day13 {
 
     func propagatesToEnd(grid: [[Character]], index: Int, leftStack: inout [[Character]], tempStack: inout [[Character]]) -> Bool {
         var check = index + 1
-        print("check: \(check)")
+        // print("check: \(check)")
         var isReflection = true
         var alreadySmudged = false
         while check < grid.count {
@@ -169,7 +169,7 @@ extension Day13 {
             }
             let smudgeable = matchesWithSmudge(rowOne: leftOne!, rowTwo: rightOne)
             if smudgeable {
-                print("made a smudge")
+                // print("made a smudge")
                 check += 1
                 alreadySmudged = true
                 continue
@@ -177,7 +177,7 @@ extension Day13 {
             isReflection = false
             break
         }
-        print("did we smudge: \(alreadySmudged)")
+        // print("did we smudge: \(alreadySmudged)")
         if isReflection && alreadySmudged {
             return true
         }
