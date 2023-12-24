@@ -4,7 +4,7 @@ import XCTest
 
 // Make a copy of this file for every day to ensure the provided smoke tests
 // pass.
-final class Day17Tests: XCTestCase {
+final class Day24Tests: XCTestCase {
     // Smoke test data provided in the challenge question
     let testData = """
     R 6 (#70c710)
@@ -24,12 +24,12 @@ final class Day17Tests: XCTestCase {
     """
 
     func testPart1() throws {
-        let challenge = Day17(data: testData)
+        let challenge = Day24(data: testData)
         XCTAssertEqual(String(describing: challenge.part1()), "62")
     }
 
     func testPart2() throws {
-        let challenge = Day17(data: testData)
+        let challenge = Day24(data: testData)
         XCTAssertEqual(String(describing: challenge.part2()), "71503")
     }
 }

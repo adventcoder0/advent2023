@@ -16,30 +16,30 @@ struct Day16: AdventDay {
 
     // Replace this with your solution for the first part of the day's challenge.
     func part1() -> Any {
-        var row = 0
-        var column = 0
-        let grid: [[Character]] = entities.map { Array($0) }
-        var direction = "right"
-        var seen: [String: String] = [:]
-        while isValid(grid: grid, point: (row, column)) {
-            let key = "\(row),\(column)"
-            seen[key] = direction
-            if grid[row][column] == "." {
-                adjustPoint(direction: direction, row: &row, column: &column)
-                continue
-            }
-            if grid[row][column] == "-" && (direction == "left" || direction == "right") {
-                adjustPoint(direction: direction, row: &row, column: &column)
-                continue
-            }
-            if grid[row][column] == "|" && (direction == "up" || direction == "down") {
-                adjustPoint(direction: direction, row: &row, column: &column)
-                continue
-            }
-            if grid[row][column] == "/" {
-                direction = "up"
-            }
-        }
+        // var row = 0
+        // var column = 0
+        // let grid: [[Character]] = entities.map { Array($0) }
+        // var direction = "right"
+        // var seen: [String: String] = [:]
+        // while isValid(grid: grid, point: (row, column)) {
+        //     let key = "\(row),\(column)"
+        //     seen[key] = direction
+        //     if grid[row][column] == "." {
+        //         adjustPoint(direction: direction, row: &row, column: &column)
+        //         continue
+        //     }
+        //     if grid[row][column] == "-" && (direction == "left" || direction == "right") {
+        //         adjustPoint(direction: direction, row: &row, column: &column)
+        //         continue
+        //     }
+        //     if grid[row][column] == "|" && (direction == "up" || direction == "down") {
+        //         adjustPoint(direction: direction, row: &row, column: &column)
+        //         continue
+        //     }
+        //     if grid[row][column] == "/" {
+        //         direction = "up"
+        //     }
+        // }
         // beware/becareful for loops in the beams, will cause infinite loop
         // how do we know it's a loop though?
         // if it's energized in the same direction?
