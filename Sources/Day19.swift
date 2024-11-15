@@ -9,13 +9,15 @@ struct Day19: AdventDay {
 
     // Splits input data into its component parts and convert from string.
     var entities: [String] {
-        data.split(separator: "\n").map {
+        data.split(separator: "\n\n").map {
             String($0)
         }
     }
 
     // Replace this with your solution for the first part of the day's challenge.
     func part1() -> Any {
+        // let stringRules = entities[0]
+        // let stringParts = entities[1]
         return "Not implemented yet"
     }
 
@@ -23,4 +25,12 @@ struct Day19: AdventDay {
     func part2() -> Any {
         return "Not implemented yet"
     }
+}
+
+struct MachinePart {
+    let x: Int
+    let m: Int
+    let a: Int
+    let s: Int
+    var accepted: Bool?
 }

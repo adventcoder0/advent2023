@@ -32,14 +32,13 @@ struct Day05: AdventDay {
             }
 
             let transformStartID = mapping[0]
-            let rangeStart = mapping[1]
-            let rangeEnd = rangeStart + mapping[2]
+            let seedStart = mapping[1]
+            let seedEnd = seedStart + mapping[2]
 
             var index = 0
-            idValues.forEach {
-                element in
-                if rangeStart <= element && element < rangeEnd {
-                    transformValues[index] = transformStartID + (element - rangeStart)
+            for element in idValues {
+                if seedStart <= element && element < seedEnd {
+                    transformValues[index] = transformStartID + (element - seedStart)
                 }
                 index += 1
             }
@@ -51,46 +50,31 @@ struct Day05: AdventDay {
     // Replace this with your solution for the last part of the day's challenge.
     func part2() throws -> Any {
         let seedString = entities[0].split(separator: " ").dropFirst()
-        var idRanges: [(Int, Int)] = []
-        var startRange: Int? = nil
-        seedString.forEach {
-            numString in
-            if startRange == nil {
-                startRange = Int(String(numString))!
-                return
+        let seedValues: [Int] = seedString.map { Int(String($0))! }
+        var seedRanges: [[Int]] = []
+        var start = true
+        var seedStart = 0
+        var seedEnd = 0
+        for value in seedValues {
+            if start == true {
+                seedStart = value
+                start = false
+            } else {
+                seedEnd = seedStart + value - 1
+                start = true
+                seedRanges.append([seedStart, seedEnd])
             }
-            let endRange = Int(String(numString))! + startRange!
-            idRanges.append((startRange!, endRange))
-            startRange = nil
         }
-        //
-        // print(idRanges)
-        idRanges.sort { $0.1 < $1.0 }
-        var transformedRanges: [(Int, Int)] = []
-        var before: [(Int, Int)] = idRanges
+        var currentRanges = seedRanges
         for lineNum in 1 ..< entities.count {
-            // print("\(lineNum): \(entities[lineNum])")
             let words = entities[lineNum].split(separator: " ")
 
             if words[1] == "map:" {
-                // print("----------newMap----------")
-                idRanges.forEach {
-                    transformedRanges.append($0)
-                }
-                transformedRanges.sort { $0.1 < $1.0 }
-                let test1 = totalNumbers(ranges: transformedRanges)
-                let test2 = totalNumbers(ranges: before)
-                if test1 != test2 {
-                    guard test1 == test2 else {
-                        print("ERRRORRRRRR")
-                        throw BadTransformError.DifferentCount(countBefore: test2, countAfter: test1, before: before, after: transformedRanges)
-                    }
-                }
-                idRanges = transformedRanges
-                before = idRanges
-                transformedRanges = []
-                // print(idRanges)
-                // print("Starting out ---------")
+                currentRanges.sort()
+                print("currentRanges = \(currentRanges)")
+                print("new map")
+                print("changing ranges:")
+
                 continue
             }
 
@@ -99,114 +83,59 @@ struct Day05: AdventDay {
                 Int(String(numString))!
             }
 
-            let needChangeRangeStart = mapping[1]
-            let needChangeRangeEnd = needChangeRangeStart + mapping[2]
-            let changeToRangeStart = mapping[0]
-            let changeToRangeEnd = changeToRangeStart + mapping[2]
+            let newRangeStart = mapping[0]
+            let mappingRangeStart = mapping[1]
+            let offset = mapping[2] - 1
+            let mappingRangeEnd = mappingRangeStart + offset
+            let newRangeEnd = newRangeStart + offset
 
-            var indexToRemove: [Int] = []
-            for index in 0 ..< idRanges.count {
-                // print("needStart")
-                // print(needChangeRangeStart)
-                // print("needEnd")
-                // print(needChangeRangeEnd)
-                // print("changeStart")
-                // print(changeToRangeStart)
-                // print("changeEnd")
-                // print(changeToRangeEnd)
-                if needChangeRangeEnd <= idRanges[index].0 {
-                    // the range that needs to be transformed is before the current range,
-                    // the next ranges will be higher, so we can break here
-                    // print("outside of range: \(idRanges[index])")
-                    break
-                }
-                if idRanges[index].1 <= needChangeRangeStart {
-                    // print("outside of range: \(idRanges[index])")
+            print("before-> start: \(mappingRangeStart), end: \(mappingRangeStart + offset)")
+            print("after-> start: \(newRangeStart), end: \(newRangeStart + offset)")
+
+            var myNewRanges: [[Int]] = []
+            for index in 0 ..< currentRanges.count {
+                let checkRange = currentRanges[index]
+                if checkRange[0] > mappingRangeStart + offset {
+                    myNewRanges.append(checkRange)
                     continue
                 }
-
-                // get overlaps
-                // get union -> these are the values to change.
-                // then we have to find possible right and left edges to keep the same
-                let overlapStart = max(needChangeRangeStart, idRanges[index].0)
-                let overlapEnd = min(needChangeRangeEnd, idRanges[index].1)
-                // print("overlap range is : \(overlapStart) - \(overlapEnd)")
-
-                var startRange: Int? = nil
-                var endRange: Int? = nil
-                // if idrange start is < overlapStart then it means we have left range
-                if idRanges[index].0 < overlapStart {
-                    let lsr = (idRanges[index].0, overlapStart)
-                    // print("LeftSide range:  \(lsr)")
-                    transformedRanges.append((idRanges[index].0, overlapStart))
-                    startRange = changeToRangeStart
+                if checkRange[1] < mappingRangeStart {
+                    myNewRanges.append(checkRange)
+                    continue
                 }
-                // if overlapEnd is < id range end then it means we have right range
-                if overlapEnd < idRanges[index].1 {
-                    let rsr = (overlapEnd, idRanges[index].1)
-                    // print("rightside range:  \(rsr)")
-                    transformedRanges.append((overlapEnd, idRanges[index].1))
-                    endRange = changeToRangeEnd
+                var leftRange: [Int] = []
+                var rightRange: [Int] = []
+                var middleRange: [Int] = []
+                // range 2 is from seeds
+                // range 1 is from mapping
+                // range 2 can start before range 1 start, need diff, keep numbers from before range 1 starts
+                if checkRange[0] < mappingRangeStart {
+                    // make leftside here
+                    let diff = mappingRangeStart - checkRange[0]
                 }
-                // how to comput the numberchange?
-                // left diff add/sub to needChangeRangeStart?
-                // right diff add/sub to needChangeRangeEnd?
-                if startRange == nil {
-                    let diff = idRanges[index].0 - needChangeRangeStart
-                    startRange = changeToRangeStart + diff
-                }
-                if endRange == nil {
-                    let diff = needChangeRangeEnd - idRanges[index].1
-                    endRange = changeToRangeEnd - diff
-                }
-                // print("affectedRange: \(overlapStart) -  \(overlapEnd)")
 
-                let newRange = (startRange!, endRange!)
-                // print("change to : \(newRange)")
-
-                // print("Remove: \(index)")
-                indexToRemove.append(index)
-                transformedRanges.append((startRange!, endRange!))
+                // range 2 can start after range 1 start, need diff, remove numbers between starts
+                // range 2 can end before range 1, need diff, remove number between ends
+                // range 2 can end after range 1, keep numbers after range 1 end
+                // make right side here
+                let middleStart = max(mappingRangeStart, checkRange[0])
+                let middleEnd = min(mappingRangeEnd, checkRange[1])
+                let startDiff = abs(mappingRangeStart - checkRange[0])
+                print("middles: \(middleStart) , \(middleEnd) diff: \(startDiff)")
             }
-
-            // print("Transformed Ranges next line:")
-            // print(transformedRanges)
-            var fin = 0
-            idRanges = idRanges.filter {
-                _ in
-                let b = !indexToRemove.contains(fin)
-                fin += 1
-                return b
-            }
-            // indexToRemove.forEach {
-            //     if $0 < 0 || $0 >= idRanges.count {
-            //         print("outof range: \($0)")
-            //     } else {
-            //         print("Remove at idex: \($0)")
-            //         idRanges.remove(at: $0)
-            //     }
-            // }
+            currentRanges = myNewRanges
         }
-
-        idRanges.forEach {
-            transformedRanges.append($0)
-        }
-        transformedRanges.sort {
-            $0.1 < $1.0
-        }
-        // print("----end result------")
-        // print(transformedRanges)
-        return transformedRanges[0].0
-    }
-
-    func totalNumbers(ranges: [(Int, Int)]) -> Int {
-        return ranges.reduce(0) {
-            sum, pair in
-            sum + (pair.1 - pair.0)
-        }
+        return seedValues
     }
 }
 
 enum BadTransformError: Error {
     case DifferentCount(countBefore: Int, countAfter: Int, before: [(Int, Int)], after: [(Int, Int)])
+}
+
+extension [Int]: Comparable {
+    // this works because no overlap with ranges
+    public static func < (lhs: [Int], rhs: [Int]) -> Bool {
+        return lhs[0] < rhs[0]
+    }
 }
