@@ -12,9 +12,9 @@ let allChallenges: [any AdventDay] = [
     Day07(),
     Day08(),
     Day09(),
-    // Day10(),
+    Day10(),
     Day11(),
-    // Day12(),
+    Day12(),
     Day13(),
     Day14(),
     Day15(),
@@ -22,7 +22,7 @@ let allChallenges: [any AdventDay] = [
     Day17(),
     Day18(),
     Day19(),
-    Day25(),
+    // Day25(),
 ]
 
 @main

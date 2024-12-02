@@ -27,12 +27,12 @@ struct Day25: AdventDay {
                 }
             }
         }
-        print("map -------------------------------")
+        // print("map -------------------------------")
         for key in apparatusDict.keys {
             print("component \(key) : \(apparatusDict[key]!)")
         }
-        print("-----------------------------------")
-        print(" first loops ------------------------")
+        // print("-----------------------------------")
+        // print(" first loops ------------------------")
         var mySet: Set<[String]> = Set()
         for key in apparatusDict.keys {
             let neighbors = apparatusDict[key]!

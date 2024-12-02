@@ -49,19 +49,14 @@ final class Day05Tests: XCTestCase {
 
     func testPart2() throws {
         let challenge = Day05(data: testData)
-        do {
-            let test = try challenge.part2()
-            XCTAssertEqual(String(describing: test), "46")
-        } catch let BadTransformError.DifferentCount(countBefore, countAfter, before, after) {
-            print("Different Count after transform")
-            print("total numbs before:")
-            print(countBefore)
-            print("total items/ # of ranges before")
-            print(before)
-            print("total numbs before:")
-            print(countAfter)
-            print("total items/ # of ranges after")
-            print(after)
-        }
+        XCTAssertEqual(String(describing: challenge.part2()), "46")
+    }
+
+    func testOutOfRange1() throws {
+        let expected = [[30, 12], [82, 5], [120, 60]]
+        var ranges = [[30, 12], [82, 5], [120, 60]]
+        let mappings = [[25, 65, 15], [70, 90, 30]]
+        Day05().adjustRangeList(rangeList: &ranges, mappingSet: mappings)
+        XCTAssertEqual(expected, ranges)
     }
 }

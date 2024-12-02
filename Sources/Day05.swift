@@ -26,8 +26,7 @@ struct Day05: AdventDay {
                 continue
             }
 
-            let mapping = words.map {
-                numString in
+            let mapping = words.map { numString in
                 Int(String(numString))!
             }
 
@@ -48,94 +47,105 @@ struct Day05: AdventDay {
     }
 
     // Replace this with your solution for the last part of the day's challenge.
-    func part2() throws -> Any {
+    func part2() -> Any {
         let seedString = entities[0].split(separator: " ").dropFirst()
         let seedValues: [Int] = seedString.map { Int(String($0))! }
-        var seedRanges: [[Int]] = []
-        var start = true
-        var seedStart = 0
-        var seedEnd = 0
-        for value in seedValues {
-            if start == true {
-                seedStart = value
-                start = false
-            } else {
-                seedEnd = seedStart + value - 1
-                start = true
-                seedRanges.append([seedStart, seedEnd])
-            }
-        }
-        var currentRanges = seedRanges
+        var rangeList = getInitList(seedValues)
+        var mappingSet: [[Int]] = []
+
         for lineNum in 1 ..< entities.count {
             let words = entities[lineNum].split(separator: " ")
-
             if words[1] == "map:" {
-                currentRanges.sort()
-                print("currentRanges = \(currentRanges)")
-                print("new map")
-                print("changing ranges:")
-
+                if mappingSet.isEmpty { continue }
+                processMapping(rangeList: &rangeList, mappingSet: &mappingSet)
                 continue
             }
 
-            let mapping = words.map {
-                numString in
+            let mapping = words.map { numString in
                 Int(String(numString))!
             }
 
-            let newRangeStart = mapping[0]
-            let mappingRangeStart = mapping[1]
-            let offset = mapping[2] - 1
-            let mappingRangeEnd = mappingRangeStart + offset
-            let newRangeEnd = newRangeStart + offset
-
-            print("before-> start: \(mappingRangeStart), end: \(mappingRangeStart + offset)")
-            print("after-> start: \(newRangeStart), end: \(newRangeStart + offset)")
-
-            var myNewRanges: [[Int]] = []
-            for index in 0 ..< currentRanges.count {
-                let checkRange = currentRanges[index]
-                if checkRange[0] > mappingRangeStart + offset {
-                    myNewRanges.append(checkRange)
-                    continue
-                }
-                if checkRange[1] < mappingRangeStart {
-                    myNewRanges.append(checkRange)
-                    continue
-                }
-                var leftRange: [Int] = []
-                var rightRange: [Int] = []
-                var middleRange: [Int] = []
-                // range 2 is from seeds
-                // range 1 is from mapping
-                // range 2 can start before range 1 start, need diff, keep numbers from before range 1 starts
-                if checkRange[0] < mappingRangeStart {
-                    // make leftside here
-                    let diff = mappingRangeStart - checkRange[0]
-                }
-
-                // range 2 can start after range 1 start, need diff, remove numbers between starts
-                // range 2 can end before range 1, need diff, remove number between ends
-                // range 2 can end after range 1, keep numbers after range 1 end
-                // make right side here
-                let middleStart = max(mappingRangeStart, checkRange[0])
-                let middleEnd = min(mappingRangeEnd, checkRange[1])
-                let startDiff = abs(mappingRangeStart - checkRange[0])
-                print("middles: \(middleStart) , \(middleEnd) diff: \(startDiff)")
-            }
-            currentRanges = myNewRanges
+            mappingSet.append(mapping)
         }
-        return seedValues
+
+        processMapping(rangeList: &rangeList, mappingSet: &mappingSet)
+        return rangeList[0][0]
     }
-}
 
-enum BadTransformError: Error {
-    case DifferentCount(countBefore: Int, countAfter: Int, before: [(Int, Int)], after: [(Int, Int)])
-}
+    func getInitList(_ seedValues: [Int]) -> [[Int]] {
+        var rangeList: [[Int]] = []
+        var start = true
+        var range: [Int] = [0, 0]
+        for num in 0 ..< seedValues.count {
+            if start == true {
+                range[0] = seedValues[num]
+                start = false
+                continue
+            }
+            range[1] = seedValues[num]
+            rangeList.append(range)
+            start = true
+        }
+        return rangeList.sorted { $0[0] < $1[0] }
+    }
 
-extension [Int]: Comparable {
-    // this works because no overlap with ranges
-    public static func < (lhs: [Int], rhs: [Int]) -> Bool {
-        return lhs[0] < rhs[0]
+    func processMapping(rangeList: inout [[Int]], mappingSet: inout [[Int]]) {
+        mappingSet = mappingSet.sorted { $0[1] < $1[1] }
+        adjustRangeList(rangeList: &rangeList, mappingSet: mappingSet)
+        // printStatus(rangeList: rangeList, mappingSet: mappingSet)
+        mappingSet = []
+    }
+
+    func adjustRangeList(rangeList: inout [[Int]], mappingSet: [[Int]]) {
+        var newRanges: [[Int]] = []
+        for rangePair in rangeList {
+            let rangeSplits = splitRange(rangePair: rangePair, mappingSet: mappingSet)
+            rangeSplits.forEach { newRanges.append($0) }
+        }
+        rangeList = newRanges.sorted { $0[0] < $1[0] }
+    }
+
+    func splitRange(rangePair: [Int], mappingSet: [[Int]]) -> [[Int]] {
+        var splits: [[Int]] = []
+        let rangeStart = rangePair[0]
+        let rangeLength = rangePair[1]
+
+        for mapping in mappingSet {
+            let adjustRangeByValue = mapping[0] - mapping[1]
+            let mapStart = mapping[1]
+            let mapLength = mapping[2]
+            let startDiff = rangeStart - mapStart
+            if startDiff >= mapLength {
+                continue
+            }
+
+            if rangeLength + startDiff <= 0 {
+                break
+            }
+
+            let needExtra = rangeStart + rangeLength > mapStart + mapLength
+
+            if needExtra, startDiff < 0 {
+                splits.append([rangeStart, 0 - startDiff])
+                splits.append([mapStart + adjustRangeByValue, mapLength])
+                splits.append([mapStart + mapLength, rangeLength + startDiff - mapLength])
+                break
+            } else if needExtra, startDiff >= 0 {
+                splits.append([rangeStart + adjustRangeByValue, mapStart + mapLength - rangeStart])
+                splits.append([mapStart + mapLength, rangeLength + startDiff - mapLength])
+                break
+            } else if startDiff < 0 {
+                splits.append([rangeStart, 0 - startDiff])
+                splits.append([mapStart + adjustRangeByValue, rangeLength + startDiff])
+                break
+            } else {
+                splits.append([rangeStart + adjustRangeByValue, rangeLength])
+                break
+            }
+        }
+        if splits.isEmpty {
+            return [rangePair]
+        }
+        return splits
     }
 }
